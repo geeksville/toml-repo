@@ -4,6 +4,6 @@
         "detachhead.basedpyright",
         "tamasfe.even-better-toml",
         "charliermarsh.ruff",
-        "github.copilot"
+        "github.copilot-chat"
     ]
 }

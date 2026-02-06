@@ -17,6 +17,9 @@ _typecheck:
 # Run all linting checks (ruff + basedpyright)
 lint: format _lint _typecheck
 
+build:
+    poetry build
+    
 format:
     # Remove trailing whitespace
     find src tests -name '*.py' -type f -exec sed -i 's/[[:space:]]*$//' {} +
