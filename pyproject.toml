@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "toml-repo"
-version = "0.1.1"
+version = "0.1.2"
 description = "A TOML-based repository manager with precedence-based configuration merging, imports, and multi-scheme URL support."
 authors = ["Kevin Hester <kevinh@geeksville.com>"]
 readme = "README.md"
