@@ -326,11 +326,30 @@ class Repo:
         """
         Read-only attribute for the repository kind (e.g., "recipe", "data", etc.).
 
+        If ``repo.kind`` is not explicitly defined in the TOML data, the kind
+        is inferred from the URL: when the last path component has an extra
+        suffix before the final ``.toml`` extension, that suffix is used as
+        the kind.  For example ``http://host/dir/file.ap.toml`` yields ``"ap"``.
+
         Returns:
             The kind of the repository as a string.
         """
-        c = self.get("repo.kind", unknown_kind)
-        return str(c)
+        c = self.get("repo.kind")
+        if c is not None:
+            return str(c)
+
+        # Infer kind from the URL filename when not explicitly set.
+        # e.g. "http://host/dir/file.ap.toml" -> ["file", "ap", "toml"] -> "ap"
+        import os
+        from urllib.parse import urlparse
+
+        parsed = urlparse(self.url)
+        basename = os.path.basename(parsed.path)
+        parts = basename.split(".")
+        if len(parts) >= 3:
+            return parts[-2]
+
+        return unknown_kind
 
     @property
     def config_url(self) -> str:
@@ -618,9 +637,15 @@ class Repo:
                 logging.debug(f"Loading repo config from {_config_suffix}")
             parsed = tomlkit.parse(config_content)
 
-            # All repos must have a "repo" table inside, otherwise we assume the file is invalid and should
-            # be reinited from template.
-            return parsed if "repo" in parsed else default_toml
+            # For directory-based repos, all repos must have a "repo" table inside,
+            # otherwise we assume the file is invalid and should be reinited from template.
+            # For direct .toml file URLs (e.g. foo.ap.toml referenced via repo-ref),
+            # we keep the parsed content as-is since it may be application data
+            # rather than a repo manifest.
+            if "repo" in parsed or self._is_direct_toml_file():
+                return parsed
+            else:
+                return default_toml
 
         except FileNotFoundError:
             logging.debug(f"No config file found for {self.url}, using template...")

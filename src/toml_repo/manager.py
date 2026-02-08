@@ -73,6 +73,18 @@ class RepoManager:
                 return repo
         return None
 
+    def get_repos_by_kind(self, kind: str) -> list[Repo]:
+        """
+        Retrieves all repositories matching the specified kind.
+
+        Args:
+            kind: The kind of repository to search for (e.g., "recipe", "preferences", "ap").
+
+        Returns:
+            A list of Repo instances matching the kind (may be empty).
+        """
+        return [repo for repo in self.repos if repo.kind() == kind]
+
     def get_repo_by_kind(self, kind: str) -> Repo | None:
         """
         Retrieves the first repository matching the specified kind.
@@ -83,10 +95,8 @@ class RepoManager:
         Returns:
             The first Repo instance matching the kind, or None if not found.
         """
-        for repo in self.repos:
-            if repo.kind() == kind:
-                return repo
-        return None
+        matches = self.get_repos_by_kind(kind)
+        return matches[0] if matches else None
 
     # If a default was provided use that type for return
     @overload
