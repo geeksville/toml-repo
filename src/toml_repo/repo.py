@@ -487,6 +487,7 @@ class Repo:
                 url = self.url.rstrip("/") + "/" + ref["dir"].lstrip("/")
 
         if url:
+            logging.debug(f"Adding repo from ref: {url}")
             return manager.add_repo(url)
         else:
             logging.warning("Skipping empty repo reference")
