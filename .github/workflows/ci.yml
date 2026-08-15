@@ -42,14 +42,14 @@ jobs:
         run: poetry run pytest --cov --cov-report=term --cov-report=xml --junit-xml=pytest.xml
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-xml
           path: coverage.xml
 
       - name: Upload junit artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: pytest.xml
