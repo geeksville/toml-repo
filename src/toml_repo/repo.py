@@ -488,7 +488,11 @@ class Repo:
 
         if url:
             logging.debug(f"Adding repo from ref: {url}")
-            return manager.add_repo(url)
+            try:
+                return manager.add_repo(url)
+            except Exception as e:
+                logging.error(f"Failed to add repo from ref: {url}, error: {e}")
+                return None
         else:
             logging.warning("Skipping empty repo reference")
             return None
