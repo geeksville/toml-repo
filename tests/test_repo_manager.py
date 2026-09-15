@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import tomlkit
 
-from toml_repo import RepoManager
+from toml_repo import RepoManager, make_file_url
 
 
 def test_repo_manager_initialization(monkeypatch, tmp_path: Path):
@@ -50,14 +50,14 @@ def test_repo_manager_initialization(monkeypatch, tmp_path: Path):
 
     # Initialize RepoManager and add the test repo
     repo_manager = RepoManager()
-    repo_manager.add_repo(f"file://{test_repo_path}")
+    repo_manager.add_repo(make_file_url(test_repo_path))
 
     # We expect the test repo plus the two referenced repos
     assert len(repo_manager.repos) >= 3
     urls = [r.url for r in repo_manager.repos]
-    assert f"file://{test_repo_path}" in urls
-    assert f"file://{ref_repo1_path}" in urls
-    assert f"file://{ref_repo2_path}" in urls
+    assert make_file_url(test_repo_path) in urls
+    assert make_file_url(ref_repo1_path) in urls
+    assert make_file_url(ref_repo2_path) in urls
 
     # Verify we can get values from all repos
     kinds = [r.kind() for r in repo_manager.repos]
@@ -96,8 +96,8 @@ def test_repo_manager_get_with_real_repos(tmp_path: Path):
 
     # 2. Initialize the RepoManager and add repos in order
     repo_manager = RepoManager()
-    repo_manager.add_repo(f"file://{recipe_repo_path}")
-    repo_manager.add_repo(f"file://{user_prefs_path}")
+    repo_manager.add_repo(make_file_url(recipe_repo_path))
+    repo_manager.add_repo(make_file_url(user_prefs_path))
 
     # 3. Assert that the values are retrieved correctly, respecting precedence
     # Last repo added wins for .get()
@@ -125,12 +125,12 @@ def test_repo_with_direct_toml_file(tmp_path: Path):
 
     # Initialize RepoManager and add the direct .toml file
     repo_manager = RepoManager()
-    repo_manager.add_repo(f"file://{custom_toml}")
+    repo_manager.add_repo(make_file_url(custom_toml))
 
     # Verify the repo was loaded correctly
     assert len(repo_manager.repos) >= 1
     urls = [r.url for r in repo_manager.repos]
-    assert f"file://{custom_toml}" in urls
+    assert make_file_url(custom_toml) in urls
 
     # Verify we can get values from the directly loaded .toml file
     assert repo_manager.get("repo.kind") == "custom"
@@ -167,8 +167,8 @@ def test_repo_direct_toml_vs_directory(tmp_path: Path):
 
     # Initialize RepoManager and add both repos
     repo_manager = RepoManager()
-    repo_manager.add_repo(f"file://{dir_repo_path}")
-    repo_manager.add_repo(f"file://{file_repo_path}")
+    repo_manager.add_repo(make_file_url(dir_repo_path))
+    repo_manager.add_repo(make_file_url(file_repo_path))
 
     # Verify both repos are loaded
     assert len(repo_manager.repos) >= 2
@@ -201,7 +201,7 @@ def test_repo_direct_toml_resolve_path(tmp_path: Path):
     # Create a repo from the direct .toml file
     from toml_repo.repo import Repo
 
-    repo = Repo(f"file://{config_file}")
+    repo = Repo(make_file_url(config_file))
 
     # Verify that resolve_path resolves relative to the parent directory
     resolved = repo.resolve_path("data.txt")
@@ -229,8 +229,8 @@ def test_repo_config_url_property(tmp_path: Path):
         """
     )
 
-    dir_repo = Repo(f"file://{dir_repo_path}")
-    expected_dir_url = f"file://{dir_repo_path}/starbash.toml"
+    dir_repo = Repo(make_file_url(dir_repo_path))
+    expected_dir_url = f"{make_file_url(dir_repo_path)}/starbash.toml"
     assert dir_repo.config_url == expected_dir_url
 
     # Test 2: Direct .toml file repo (should return URL as-is)
@@ -242,8 +242,8 @@ def test_repo_config_url_property(tmp_path: Path):
         """
     )
 
-    toml_repo = Repo(f"file://{toml_file}")
-    expected_toml_url = f"file://{toml_file}"
+    toml_repo = Repo(make_file_url(toml_file))
+    expected_toml_url = make_file_url(toml_file)
     assert toml_repo.config_url == expected_toml_url
 
 
@@ -266,7 +266,7 @@ def test_config_suffix_customization(tmp_path: Path):
         """
     )
 
-    repo = Repo(f"file://{repo_path}")
+    repo = Repo(make_file_url(repo_path))
     assert repo.kind() == "custom-suffix"
     assert repo.get("settings.value") == "works"
-    assert repo.config_url == f"file://{repo_path}/myapp.toml"
+    assert repo.config_url == f"{make_file_url(repo_path)}/myapp.toml"

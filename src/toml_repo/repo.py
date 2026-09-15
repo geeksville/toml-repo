@@ -12,6 +12,7 @@ from tomlkit.toml_document import TOMLDocument
 from tomlkit.toml_file import TOMLFile
 
 from .http_client import http_session
+from .urls import make_file_url, path_from_file_url
 
 if TYPE_CHECKING:
     from .manager import RepoManager
@@ -94,7 +95,7 @@ class Repo:
         if isinstance(url_or_path, Path):
             # Always resolve to an absolute path to avoid ambiguity
             resolved = url_or_path.expanduser().resolve()
-            url = f"file://{resolved}"
+            url = make_file_url(resolved)
         else:
             url = str(url_or_path)
 
@@ -406,7 +407,7 @@ class Repo:
             raise ValueError("Cannot write config for non-local repository")
 
         if self._is_direct_toml_file():
-            config_path = Path(self.url[len("file://") :])
+            config_path = path_from_file_url(self.url)
         else:
             base_path = self.get_path()
             if base_path is None:
@@ -454,7 +455,7 @@ class Repo:
             A Path object if the URL is a local file, otherwise None.
         """
         if self.is_scheme("file"):
-            path = Path(self.url[len("file://") :])
+            path = path_from_file_url(self.url)
             if self._is_direct_toml_file():
                 return path.parent
             return path
@@ -481,7 +482,7 @@ class Repo:
                 else:
                     # Expand ~ and resolve from CWD
                     path = path.expanduser().resolve()
-                url = f"file://{path}"
+                url = make_file_url(path)
             else:
                 # construct an URL relative to this repo's URL
                 url = self.url.rstrip("/") + "/" + ref["dir"].lstrip("/")
@@ -539,7 +540,7 @@ class Repo:
         """
         if not filepath:
             # Read directly from the URL
-            path = Path(self.url[len("file://") :])
+            path = path_from_file_url(self.url)
             return path.read_text()
 
         target_path = self.resolve_path(filepath)
