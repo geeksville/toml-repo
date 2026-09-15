@@ -55,7 +55,9 @@ def test_path_from_file_url_reads_a_windows_drive_letter():
     """
     path = path_from_file_url("file:///C:/Users/runner/data")
 
-    assert str(path) == "C:/Users/runner/data"
+    # as_posix(), not str(): the parsing is platform-independent, but the rendering
+    # is not -- str() of the Windows Path this becomes is "C:\\Users\\runner\\data".
+    assert path.as_posix() == "C:/Users/runner/data"
     assert PureWindowsPath(str(path)).drive == "C:"
     assert PureWindowsPath(str(path)).is_absolute()
 
@@ -94,13 +96,15 @@ def test_path_from_file_url_handles_a_windows_unc_share():
 
 def test_path_from_file_url_ignores_a_localhost_host():
     """``file://localhost/data`` means ``file:///data`` -- the host is this machine."""
-    assert str(path_from_file_url("file://localhost/data")) == "/data"
-    assert str(path_from_file_url("file://127.0.0.1/data")) == "/data"
+    # as_posix(), not str(): the parsing is platform-independent, but str() renders a
+    # path with the platform's own separator (a Windows Path spells this "\\data").
+    assert path_from_file_url("file://localhost/data").as_posix() == "/data"
+    assert path_from_file_url("file://127.0.0.1/data").as_posix() == "/data"
 
 
 def test_path_from_file_url_decodes_percent_encoding():
     """Encoded characters (as ``as_uri()`` writes them) come back verbatim."""
-    assert str(path_from_file_url("file:///a%20b/c%26d")) == "/a b/c&d"
+    assert path_from_file_url("file:///a%20b/c%26d").as_posix() == "/a b/c&d"
 
 
 def test_path_from_file_url_keeps_a_posix_directory_that_looks_like_a_drive():
@@ -109,7 +113,7 @@ def test_path_from_file_url_keeps_a_posix_directory_that_looks_like_a_drive():
     ``as_uri()`` percent-encodes the colon of a POSIX path, so matching the
     drive pattern against the encoded path is what keeps the two apart.
     """
-    assert str(path_from_file_url("file:///C%3A/x")) == "/C:/x"
+    assert path_from_file_url("file:///C%3A/x").as_posix() == "/C:/x"
 
 
 @pytest.mark.parametrize(
